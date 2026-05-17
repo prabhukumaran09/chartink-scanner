@@ -2,8 +2,8 @@ import streamlit as st
 import pandas as pd
 import time
 from datetime import datetime
-from scanner.engine import run_all_scans, market_status_label, is_market_open
-from scanner.fno_list import get_fno_stocks, get_fno_count
+from scanner.engine import run_all_scans, market_status_label, is_market_open, get_data_date_label
+from scanner.fno_list import get_fno_stocks, get_fno_count, get_fno_source, refresh_live_list
 from alerts.telegram_alert import send_telegram_batch
 from alerts.desktop_alert import send_desktop_alert
 from config import load_config, save_config
@@ -55,19 +55,31 @@ with st.sidebar:
     cfg["min_volume_ratio"] = st.number_input("Min Vol Ratio ×", value=cfg.get("min_volume_ratio", 1.5), step=0.1, format="%.1f")
 
     st.divider()
+    st.subheader("📋 FNO Stock List")
+    st.caption(get_fno_source())
+    if st.button("🔄 Refresh Stock List"):
+        refresh_live_list()
+        st.success(f"Refreshed! {get_fno_source()}")
+        st.rerun()
+
+    st.divider()
     if st.button("💾 Save Config"): save_config(cfg); st.success("Saved!")
 
 # ── Header ───────────────────────────────────────────────────────────────────
 c1, c2, c3, c4 = st.columns([4, 2, 2, 2])
 with c1: st.title("📊 NSE FNO Scanner")
-with c2: st.metric("FNO Universe", f"{get_fno_count()} stocks")
+with c2:
+    st.metric("FNO Universe", f"{get_fno_count()} stocks")
+    st.caption(get_fno_source())
 with c3:
     lbl = st.session_state.last_scan_time.strftime("%H:%M:%S") if st.session_state.last_scan_time else "—"
     st.metric("Last Scan", lbl)
 with c4:
     run_scan = st.button("🚀 Run Scan Now", type="primary", use_container_width=True)
 
-st.caption(market_status_label())
+col_status, col_date = st.columns(2)
+with col_status: st.caption(market_status_label())
+with col_date:   st.markdown(get_data_date_label())
 st.divider()
 
 # ── Tabs ─────────────────────────────────────────────────────────────────────
@@ -84,6 +96,8 @@ with tab1:
         bullish = df[df["badge"] == "bull"]
         bearish = df[df["badge"] == "bear"]
 
+        st.markdown(get_data_date_label())
+        st.divider()
         m1, m2, m3, m4 = st.columns(4)
         m1.metric("Total Signals",   len(df))
         m2.metric("🟢 Bullish",      len(bullish))
@@ -249,7 +263,7 @@ if run_scan:
         st.session_state.alert_history = new_alerts + st.session_state.alert_history
 
         if results:
-            st.success(f"✅ {len(results)} signal(s) found across {total} FNO stocks!")
+            st.success(f"✅ {len(results)} signal(s) found across {total} FNO stocks! | {get_data_date_label()}")
         else:
             st.info(f"✅ Scan done — no signals matched. Try adjusting conditions.")
     except Exception as e:

@@ -205,3 +205,27 @@ def run_all_scans(cfg: dict, progress_cb=None) -> list[dict]:
                 progress_cb(done, total, sym)
 
     return results
+
+
+# ── Data date helper ─────────────────────────────────────────────────────────
+def get_data_date_label() -> str:
+    """
+    Returns a human-readable label for what date's data is being shown.
+    """
+    from datetime import date, timedelta
+    today = date.today()
+    now_t = datetime.now().time()
+
+    # If weekend
+    if today.weekday() == 5:  # Saturday
+        last_trading = today - timedelta(days=1)
+    elif today.weekday() == 6:  # Sunday
+        last_trading = today - timedelta(days=2)
+    elif now_t < dtime(9, 15):
+        last_trading = today - timedelta(days=1 if today.weekday() > 0 else 3)
+    else:
+        last_trading = today
+
+    is_live = is_market_open()
+    suffix  = "🟢 LIVE" if is_live else "🔴 Closed (End-of-Day)"
+    return f"📅 Data Date: **{last_trading.strftime('%d %b %Y (%A)')}** — {suffix}"
