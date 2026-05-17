@@ -1,0 +1,21 @@
+# NSE FNO Scanner – Python dependencies
+
+# Dashboard
+streamlit>=1.35.0
+
+# NSE data (choose one or both — engine tries nsepython first)
+nsepython>=2.7
+jugaad-data>=0.28
+
+# Technical indicators (used by indicators.py)
+numpy>=1.26.0
+pandas>=2.2.0
+
+# Desktop notifications (optional but recommended for local use)
+plyer>=2.1.0
+
+# HTTP (stdlib urllib used for Telegram, but requests is handy for debugging)
+requests>=2.31.0
+
+# Extra (used for scheduling / utilities)
+python-dateutil>=2.9.0
